@@ -1,4 +1,3 @@
-import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
   StyleSheet,
@@ -6,20 +5,23 @@ import {
   View,
   Image,
   SafeAreaView,
-  TouchableHighlight,
   Button,
+  TouchableHighlight,
   Alert,
+  Platform,
+  StatusBar,
 } from "react-native";
+import { DimensionButton } from "./Components";
 
 export default function App() {
   interface picture {
-    url: string;
+    uri: string;
     width: number;
     height: number;
   }
 
   const [image, setImage] = useState<picture>({
-    url: "https://picsum.photos/200/300",
+    uri: "https://picsum.photos/200/300",
     width: 200,
     height: 300,
   });
@@ -61,11 +63,35 @@ export default function App() {
       await handleRefresh();
     } else {
       setImage({
-        url: `https://picsum.photos/${newWidth}/${newHeight}`,
+        uri: `https://picsum.photos/${newWidth}/${newHeight}`,
         width: newWidth,
         height: newHeight,
       });
     }
+  };
+
+  const handleWidth = async (width: number) => {
+    const response = await fetch(
+      `https://picsum.photos/${width}/${image.height}`
+    );
+
+    setImage({
+      uri: response.url,
+      width: width,
+      height: image.height,
+    });
+  };
+
+  const handleHeight = async (height: number) => {
+    const response = await fetch(
+      `https://picsum.photos/${image.width}/${height}`
+    );
+
+    setImage({
+      uri: response.url,
+      width: image.width,
+      height: height,
+    });
   };
 
   const handleRefresh = async () => {
@@ -75,44 +101,99 @@ export default function App() {
 
     setImage({
       ...image,
-      url: response.url,
+      uri: response.url,
     });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.appContainer}>
       <Text>Random Picture Generator</Text>
-      <TouchableHighlight onPress={handleRefresh}>
-        <Image
-          source={{
-            width: image.width,
-            height: image.height,
-            uri: image.url,
-          }}
+      <View style={styles.imageContainer}>
+        <TouchableHighlight onPress={handleRefresh}>
+          <Image source={image} />
+        </TouchableHighlight>
+      </View>
+      <View style={{ padding: 10 }}>
+        <Button
+          title="Change Dimensions"
+          onPress={() =>
+            Alert.alert("Would you like to change dimensions?", "", [
+              {
+                text: "Yes",
+                onPress: handleDimensions,
+              },
+              { text: "No" },
+            ])
+          }
         />
-      </TouchableHighlight>
-      <Button
-        title="Change Dimensions"
-        onPress={() =>
-          Alert.alert("Would you like to change dimensions?", "", [
-            {
-              text: "Yes",
-              onPress: handleDimensions,
-            },
-            { text: "No" },
-          ])
-        }
-      />
-      <StatusBar style="auto" />
+      </View>
+      <View style={styles.buttonRow}>
+        <DimensionButton
+          onPress={() => handleWidth(100)}
+          value={100}
+          highlight={image.width}
+        />
+        <DimensionButton
+          onPress={() => handleWidth(200)}
+          value={200}
+          highlight={image.width}
+        />
+        <DimensionButton
+          onPress={() => handleWidth(300)}
+          value={300}
+          highlight={image.width}
+        />
+        <DimensionButton
+          onPress={() => handleWidth(400)}
+          value={400}
+          highlight={image.width}
+        />
+      </View>
+      <View style={styles.buttonRow}>
+        <DimensionButton
+          onPress={() => handleHeight(100)}
+          value={100}
+          highlight={image.height}
+        />
+        <DimensionButton
+          onPress={() => handleHeight(200)}
+          value={200}
+          highlight={image.height}
+        />
+        <DimensionButton
+          onPress={() => handleHeight(300)}
+          value={300}
+          highlight={image.height}
+        />
+        <DimensionButton
+          onPress={() => handleHeight(400)}
+          value={400}
+          highlight={image.height}
+        />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  appContainer: {
     flex: 1,
     backgroundColor: "#ffffff",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     alignItems: "center",
     justifyContent: "center",
+  },
+  imageContainer: {
+    width: 400,
+    height: 400,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    width: "100%",
+    paddingVertical: 10,
+    paddingHorizontal: "5%",
+    justifyContent: "space-evenly",
   },
 });
