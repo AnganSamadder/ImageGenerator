@@ -11,6 +11,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { DimensionButton } from "./Components";
 
 export default function App() {
@@ -62,8 +63,12 @@ export default function App() {
     if (sameDimensions) {
       await handleRefresh();
     } else {
+      const response = await fetch(
+        `https://picsum.photos/${newWidth}/${newHeight}`
+      );
+
       setImage({
-        uri: `https://picsum.photos/${newWidth}/${newHeight}`,
+        uri: response.url,
         width: newWidth,
         height: newHeight,
       });
@@ -107,25 +112,14 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.appContainer}>
-      <Text>Random Picture Generator</Text>
+      <Text style={styles.title}>Random Picture Generator</Text>
       <View style={styles.imageContainer}>
         <TouchableHighlight onPress={handleRefresh}>
           <Image source={image} />
         </TouchableHighlight>
       </View>
       <View style={{ padding: 10 }}>
-        <Button
-          title="Change Dimensions"
-          onPress={() =>
-            Alert.alert("Would you like to change dimensions?", "", [
-              {
-                text: "Yes",
-                onPress: handleDimensions,
-              },
-              { text: "No" },
-            ])
-          }
-        />
+        <Button title="Change Dimensions" onPress={handleDimensions} />
       </View>
       <View style={styles.buttonRow}>
         <DimensionButton
@@ -171,6 +165,15 @@ export default function App() {
           highlight={image.height}
         />
       </View>
+      <View style={{ padding: 10 }}>
+        <Button
+          title="Get Image URL"
+          onPress={async () => {
+            await Clipboard.setStringAsync(image.uri);
+            Alert.alert("Image URL Copied to Clipboard", image.uri);
+          }}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -182,6 +185,10 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     alignItems: "center",
     justifyContent: "center",
+  },
+  title: {
+    fontSize: 25,
+    fontWeight: "bold",
   },
   imageContainer: {
     width: 400,
